@@ -1,0 +1,7 @@
+name = "lhp"
+type = "webpack"
+account_id = "4a669528893fa80a9c36ceb3fe466b34"
+workers_dev = true
+route = ""
+zone_id = "863055e79949c3d47633d0fa7efe7d59"
+webpack_config = "webpack.config.js"
