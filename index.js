@@ -30,9 +30,28 @@ let emscripten_module = new Promise((resolve, reject) => {
   })
 })
 
+function parseQueryString(request) {
+  const params = {}
+  const url = new URL(request.url)
+  const queryString = url.search.slice(1).split('&')
+  queryString.forEach((item) => {
+    const kv = item.split('=')
+    if (kv[0]) params[kv[0]] = kv[1] || true
+  })
+  return params
+}
+
 async function handleRequest(event) {
   const request = event.request
   const response = await fetch(request)
+
+  const params = parseQueryString(request)
+
+  if (params.noexecute) {
+    const plainResponse = new Response(response.body, response)
+    plainResponse.headers.set('Content-Type', 'text/plain')
+    return plainResponse
+  }
 
   const evaluator = await emscripten_module
 
@@ -44,7 +63,7 @@ async function handleRequest(event) {
   // Execute and retrieve result
   const resultSize = evaluator.execute()
   if (resultSize <= 1) {
-    return new Response(script, response)
+    return response
   }
   const resultPtr = evaluator.retrieve()
   const result = new Uint8Array(
