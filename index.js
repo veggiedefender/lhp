@@ -1,7 +1,7 @@
 // import the emscripten glue code
 import emscripten from './build/module.js'
 
-addEventListener('fetch', event => {
+addEventListener('fetch', (event) => {
   event.respondWith(handleRequest(event))
 })
 
@@ -20,7 +20,7 @@ let emscripten_module = new Promise((resolve, reject) => {
       receive(instance)
       return instance.exports
     },
-  }).then(module => {
+  }).then((module) => {
     resolve({
       init: module.cwrap('init', 'number', ['number']),
       execute: module.cwrap('execute', 'number', []),
@@ -31,23 +31,25 @@ let emscripten_module = new Promise((resolve, reject) => {
 })
 
 async function handleRequest(event) {
-  let request = event.request
-  let response = await fetch(request)
+  const request = event.request
+  const response = await fetch(request)
 
-  let evaluator = await emscripten_module
+  const evaluator = await emscripten_module
 
   // Pass request body to evaluator
-  let script = new Uint8Array(await response.arrayBuffer())
-  let scriptPtr = evaluator.init(script.length)
+  const script = new Uint8Array(await response.arrayBuffer())
+  const scriptPtr = evaluator.init(script.length)
   evaluator.module.HEAPU8.set(script, scriptPtr)
 
   // Execute and retrieve result
-  let resultSize = evaluator.execute()
-  if (resultSize === 0) {
-    return new Response(bytes, response)
+  const resultSize = evaluator.execute()
+  if (resultSize <= 1) {
+    return new Response(script, response)
   }
-  ptr = evaluator.retrieve()
-  let result = new Uint8Array(evaluator.module.HEAPU8.subarray(ptr, ptr+resultSize))
+  const resultPtr = evaluator.retrieve()
+  const result = new Uint8Array(
+    evaluator.module.HEAPU8.subarray(resultPtr, resultPtr + resultSize),
+  )
 
   return new Response(result, response)
 }
