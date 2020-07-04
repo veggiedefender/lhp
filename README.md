@@ -1,11 +1,53 @@
-# 👷 `worker-emscripten-template`
+# LHP - LHP Hypertext Preprocessor
+A Cloudflare Worker that lets you embed Lua code on a web page as if it were PHP.
 
-A template for kick starting a Cloudflare worker project with emscripten
+**Demo:** Try out https://jse.li/lua and visit https://jse.li/lua?noexecute=1 to see the page's source code.
+
+Instantly turn static sites dynamic in the *worst way possible!* Write HTML like this, and wrap any Lua code you want in `<?lua ... ?>` to be executed by the worker. A special function named `echo` is provided, which writes strings to the page.
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <title>LHP demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+  <p>LHP (LHP Hypertext Preprocessor)</p>
+  <?lua
+    function fib(n, a, b)
+        if n == 0 then
+            return a
+        end
+        if n == 1 then
+            return b
+        end
+        return fib(n - 1, b, a + b)
+    end
+
+    function nth_fibonacci(n)
+        return fib(n, 0, 1)
+    end
+  ?>
+
+  <p>Running <?lua echo(_VERSION) ?></p>
+  <p>Current time: <?lua echo(os.date()) ?></p>
+  <p>The first 20 fibonacci numbers are:</p>
+  <ul>
+    <?lua
+      for i = 1, 20 do
+          echo("<li>" .. nth_fibonacci(i) .. "</li>")
+      end
+    ?>
+  </ul>
+</body>
+</html>
+```
 
 [`index.js`](index.js) is the content of the Workers script.  
-[`main.c`](src/main.c) is the c source code that calls into the stb image resizer library.  
+[`main.c`](src/main.c) is the c source code that calls into the lua library.  
 [`build.js`](build.js) holds the command we use to call emscripten.  
-[`webpack.config.js`](webpack.config.js) holds the webpack config we use to bundle the emscripten output together with your script.
+[`webpack.config.js`](webpack.config.js) holds the webpack config we use to bundle the emscripten output together with the script.
 
 This template requires [Docker](https://docs.docker.com/install/) for providing the emscripten build environment. While we believe this provides the best developer experience, if you wish to not use Docker you can delete the check for docker and the docker parts of the build command in `build.js`. Note this means you must have emscripten installed on your machine.
 
